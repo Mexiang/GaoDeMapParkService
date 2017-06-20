@@ -46,6 +46,7 @@
 
     [self setUpCenterAnnotationView];
 }
+
 - (void)creatMapView {
     _mapView = [[MAMapView alloc]initWithFrame:self.view.bounds];
     _mapView.delegate = self;
@@ -232,7 +233,10 @@
 - (void)removeStopAnnotaion {
     [UIView animateWithDuration:.5 animations:^{
         //移除地图上现有的停车场大头针
-        [self.mapView removeAnnotations:self.dataSource];
+        //添加线程锁，防止self.dataSource数据被改
+        @synchronized (self) {
+            [self.mapView removeAnnotations:self.dataSource];
+        }
     } completion:^(BOOL finished) {
         [self centerAnnotaionAnimation];
     }];
