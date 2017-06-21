@@ -17,6 +17,7 @@
 }
 @property (nonatomic, strong) MAMapView *mapView;
 @property (nonatomic, strong) AMapSearchAPI *searchAPI;
+
 @property (nonatomic) CLLocation *currentLocation;
 
 @property (nonatomic, strong) NSMutableArray *dataSource;
@@ -94,7 +95,6 @@
         [self centerAnnotaionAnimation];
         [self POIAroundSearchRequest:[AMapGeoPoint locationWithLatitude:userLocation.location.coordinate.latitude longitude:userLocation.location.coordinate.longitude]];
     }
-    
     _currentLocation = userLocation.location;
 }
 
@@ -113,6 +113,7 @@
 - (void)mapView:(MAMapView *)mapView mapDidMoveByUser:(BOOL)wasUserAction {
     if (wasUserAction)
     {
+//        [self removeStopAnnotaion];
         NSLog(@"滑动地图结束");
         [self POIAroundSearchRequest:[AMapGeoPoint locationWithLatitude:mapView.centerCoordinate.latitude longitude:mapView.centerCoordinate.longitude]];
     }
@@ -134,6 +135,7 @@
 - (void)mapView:(MAMapView *)mapView mapDidZoomByUser:(BOOL)wasUserAction {
     NSLog(@"地图缩放结束");
     if (wasUserAction) {
+//        [self removeStopAnnotaion];
         [self POIAroundSearchRequest:[AMapGeoPoint locationWithLatitude:mapView.centerCoordinate.latitude longitude:mapView.centerCoordinate.longitude]];
     }
 }
@@ -175,8 +177,7 @@
         {
             annotationView = [[MAAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:stopCarReuseIndetifier];
         }
-
-        annotationView.canShowCallout = YES;
+        
         UIImage *image = [UIImage imageNamed:@"centerAnnotation"];
         annotationView.image = image;
         annotationView.frame = CGRectMake(0, 0, image.size.width, image.size.height);
@@ -186,7 +187,7 @@
         
         return annotationView;
     }
-    
+
     return nil;
 }
 
@@ -221,9 +222,11 @@
 #pragma mark private
 //发起poi检索
 - (void)POIAroundSearchRequest:(AMapGeoPoint *)point {
+    //取消所有未回调的请求，防止多次叠加请求，防止造成数据源错乱
+    [self.searchAPI cancelAllRequests];
     //地图移动结束，请求高德地图附近停车场信息
     AMapPOIAroundSearchRequest *request = [[AMapPOIAroundSearchRequest alloc]init];
-    request.keywords = @"停车场";
+    request.keywords = @"停车库";
     request.radius = 3000;
     request.location = point;
     /*发起搜索*/
@@ -232,11 +235,12 @@
 //移除地图上所有的停车场大头针
 - (void)removeStopAnnotaion {
     [UIView animateWithDuration:.5 animations:^{
-        //移除地图上现有的停车场大头针
-        //添加线程锁，防止self.dataSource数据被改
-        @synchronized (self) {
-            [self.mapView removeAnnotations:self.dataSource];
-        }
+        
+        NSMutableArray *removeAnnotations = [[NSMutableArray alloc]init];
+        [removeAnnotations addObjectsFromArray:self.mapView.annotations];
+        [removeAnnotations removeObject:self.mapView.userLocation];
+        [self.mapView removeAnnotations:removeAnnotations];
+        
     } completion:^(BOOL finished) {
         [self centerAnnotaionAnimation];
     }];
@@ -253,6 +257,10 @@
     NSValue *value1 = [NSValue valueWithCGPoint:CGPointMake(origin_x+centerAnnotationImage.size.width/2, origin_y-30+centerAnnotationImage.size.height+10)];
     NSValue *value2 = [NSValue valueWithCGPoint:CGPointMake(origin_x+centerAnnotationImage.size.width/2, origin_y+centerAnnotationImage.size.height+10)];
     anima1.values = [NSArray arrayWithObjects:value0,value1,value2, nil];
+    //缩放动画
+//    CABasicAnimation *anima2 = [CABasicAnimation animationWithKeyPath:@"transform.scale"];
+//    anima2.fromValue = [NSNumber numberWithFloat:0.5f];
+//    anima2.toValue = [NSNumber numberWithFloat:1.0f];
     //组动画
     CAAnimationGroup *groupAnimation = [CAAnimationGroup animation];
     groupAnimation.animations = [NSArray arrayWithObjects:anima1, nil];
