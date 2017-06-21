@@ -234,16 +234,25 @@
 }
 //移除地图上所有的停车场大头针
 - (void)removeStopAnnotaion {
+    NSMutableArray *removeAnnotations = [[NSMutableArray alloc]init];
+
     [UIView animateWithDuration:.5 animations:^{
-        
-        NSMutableArray *removeAnnotations = [[NSMutableArray alloc]init];
         [removeAnnotations addObjectsFromArray:self.mapView.annotations];
         [removeAnnotations removeObject:self.mapView.userLocation];
         [self.mapView removeAnnotations:removeAnnotations];
-        
     } completion:^(BOOL finished) {
         [self centerAnnotaionAnimation];
     }];
+    
+//    [UIView animateWithDuration:.5 animations:^{
+//        //移除地图上现有的停车场大头针
+//        //添加线程锁，防止self.dataSource数据被改
+//        @synchronized (self.dataSource) {
+//            [self.mapView removeAnnotations:self.dataSource];
+//        }
+//    } completion:^(BOOL finished) {
+//        [self centerAnnotaionAnimation];
+//    }];
 }
 //跳动动画
 - (void)centerAnnotaionAnimation {
