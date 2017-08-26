@@ -113,7 +113,6 @@
 - (void)mapView:(MAMapView *)mapView mapDidMoveByUser:(BOOL)wasUserAction {
     if (wasUserAction)
     {
-//        [self removeStopAnnotaion];
         NSLog(@"滑动地图结束");
         [self POIAroundSearchRequest:[AMapGeoPoint locationWithLatitude:mapView.centerCoordinate.latitude longitude:mapView.centerCoordinate.longitude]];
     }
@@ -135,7 +134,6 @@
 - (void)mapView:(MAMapView *)mapView mapDidZoomByUser:(BOOL)wasUserAction {
     NSLog(@"地图缩放结束");
     if (wasUserAction) {
-//        [self removeStopAnnotaion];
         [self POIAroundSearchRequest:[AMapGeoPoint locationWithLatitude:mapView.centerCoordinate.latitude longitude:mapView.centerCoordinate.longitude]];
     }
 }
@@ -237,22 +235,14 @@
     NSMutableArray *removeAnnotations = [[NSMutableArray alloc]init];
 
     [UIView animateWithDuration:.5 animations:^{
+        //将所有需要移除打大头针添加一个数组，去掉当前位置的大头针
         [removeAnnotations addObjectsFromArray:self.mapView.annotations];
         [removeAnnotations removeObject:self.mapView.userLocation];
+        //移除需要移除的大头针
         [self.mapView removeAnnotations:removeAnnotations];
     } completion:^(BOOL finished) {
         [self centerAnnotaionAnimation];
     }];
-    
-//    [UIView animateWithDuration:.5 animations:^{
-//        //移除地图上现有的停车场大头针
-//        //添加线程锁，防止self.dataSource数据被改
-//        @synchronized (self.dataSource) {
-//            [self.mapView removeAnnotations:self.dataSource];
-//        }
-//    } completion:^(BOOL finished) {
-//        [self centerAnnotaionAnimation];
-//    }];
 }
 //跳动动画
 - (void)centerAnnotaionAnimation {
